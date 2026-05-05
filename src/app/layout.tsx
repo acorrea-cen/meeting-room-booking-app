@@ -3,7 +3,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
-  title: "Censys | Reserva de Salas",
+  title: "Censys S.A. | Reserva de Salas",
   description: "Aplicación interna para reservar salas de reuniones",
 };
 
