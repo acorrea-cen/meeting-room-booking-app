@@ -5,7 +5,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import type { EventInput, DateSelectArg } from "@fullcalendar/core";
+import type { EventInput, DateSelectArg, DateClickArg } from "@fullcalendar/core";
 import { Button } from "@/components/ui/button";
 import { BookingDialog } from "@/components/bookings/booking-dialog";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
@@ -25,11 +25,19 @@ type Props = {
 export function CalendarView({ rooms, initialRoomId }: Props) {
   const [roomId, setRoomId] = useState(initialRoomId);
   const [events, setEvents] = useState<EventInput[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
   const [dialog, setDialog] = useState<{
     open: boolean;
     start?: Date;
     end?: Date;
   }>({ open: false });
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const room = useMemo(() => rooms.find((r) => r.id === roomId), [rooms, roomId]);
 
@@ -82,6 +90,12 @@ export function CalendarView({ rooms, initialRoomId }: Props) {
     setDialog({ open: true, start: arg.start, end: arg.end });
   }
 
+  function handleDateClick(arg: DateClickArg) {
+    const start = arg.date;
+    const end = new Date(start.getTime() + 30 * 60 * 1000);
+    setDialog({ open: true, start, end });
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -105,8 +119,12 @@ export function CalendarView({ rooms, initialRoomId }: Props) {
       <div className="rounded-lg border bg-card p-3">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="timeGridWeek"
-          headerToolbar={{
+          initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
+          headerToolbar={isMobile ? {
+            left: "prev,next",
+            center: "title",
+            right: "today",
+          } : {
             left: "prev,next today",
             center: "title",
             right: "dayGridMonth,timeGridWeek,timeGridDay",
@@ -118,10 +136,12 @@ export function CalendarView({ rooms, initialRoomId }: Props) {
           allDaySlot={false}
           selectable
           selectMirror
+          longPressDelay={300}
           nowIndicator
           height="auto"
           events={events}
           select={handleSelect}
+          dateClick={handleDateClick}
         />
       </div>
 
