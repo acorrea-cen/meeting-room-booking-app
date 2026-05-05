@@ -28,19 +28,25 @@ export const roomSchema = z.object({
   active: z.boolean().optional(),
 });
 
-export const bookingSchema = z
-  .object({
-    title: z.string().min(2),
-    notes: z.string().optional().nullable(),
-    roomId: z.string().min(1),
-    startTime: z.coerce.date(),
-    endTime: z.coerce.date(),
-  })
-  .refine((d) => d.endTime > d.startTime, {
-    message: "endTime debe ser posterior a startTime",
-    path: ["endTime"],
-  });
+const bookingBaseSchema = z.object({
+  title: z.string().min(2),
+  notes: z.string().optional().nullable(),
+  roomId: z.string().min(1),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+});
+
+export const bookingSchema = bookingBaseSchema.refine(
+  (d) => d.endTime > d.startTime,
+  { message: "endTime debe ser posterior a startTime", path: ["endTime"] }
+);
+
+export const bookingUpdateSchema = bookingBaseSchema.partial().refine(
+  (d) => !d.startTime || !d.endTime || d.endTime > d.startTime,
+  { message: "endTime debe ser posterior a startTime", path: ["endTime"] }
+);
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type RoomInput = z.infer<typeof roomSchema>;
 export type BookingInput = z.infer<typeof bookingSchema>;
+export type BookingUpdateInput = z.infer<typeof bookingUpdateSchema>;

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth, isAdmin } from "@/lib/auth";
 import { bookingsService, BookingOverlapError } from "@/services/bookings.service";
-import { bookingSchema } from "@/lib/validators";
+import { bookingUpdateSchema } from "@/lib/validators";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -31,7 +31,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
   }
 
   const body = await req.json();
-  const parsed = bookingSchema.partial().safeParse(body);
+  const parsed = bookingUpdateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
